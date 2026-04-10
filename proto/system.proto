@@ -1,0 +1,72 @@
+syntax = "proto3";
+package distributed;
+
+message TensorPayload {
+  repeated float values = 1;
+  repeated int32 shape  = 2;
+}
+
+message Ack {
+  bool         success = 1;
+  int64        round   = 2;
+  ServerStatus status  = 3;
+}
+
+enum ServerStatus {
+  OK            = 0;
+  RESYNC_NEEDED = 1;
+}
+
+message MockTaskRequest  { string worker_name = 1; }
+message MockTaskReply {
+  string task_id       = 1;
+  string dataset_name  = 2;
+  int32  shard_index   = 3;
+  int32  total_shards  = 4;
+  int32  epochs        = 5;
+  int32  batch_size    = 6;
+  double learning_rate = 7;
+}
+
+message PingRequest {
+  string worker_name    = 1;
+  int64  round          = 2;
+}
+
+message PingReply {
+  bool   alive          = 1;
+}
+
+
+message WeightsRequest  { string worker_name = 1; }
+message WeightsPayload {
+  int64         round   = 1;
+  TensorPayload weights = 2;
+}
+
+message GradientPayload {
+  string        worker_name = 1;
+  int64         round       = 2;
+  int32         shard_index = 3;
+  TensorPayload gradients   = 4;
+}
+
+message CheckpointRequest { string worker_name = 1; }
+message CheckpointReply {
+  int64         round   = 1;
+  TensorPayload weights = 2;
+}
+
+service CoordinatorService {
+  // Worker registers on startup, receives shard assignment
+  rpc GetMockTask(MockTaskRequest)      returns (MockTaskReply);
+
+  // Worker pulls current master weights at start of each round
+  rpc GetWeights(WeightsRequest)        returns (WeightsPayload);
+
+  // Worker submits computed gradients at end of round
+  rpc SubmitGradients(GradientPayload)  returns (Ack);
+
+  // Restarting worker fetches latest checkpoint
+  rpc GetCheckpoint(CheckpointRequest)  returns (CheckpointReply);
+}

@@ -32,3 +32,4 @@ service ConnectionService {
   rpc Ping(PingRequest) returns (PingReply);
   rpc GetMockTask(MockTaskRequest) returns (MockTaskReply);
 }
+

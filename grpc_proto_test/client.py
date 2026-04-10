@@ -34,12 +34,7 @@ def ping(host: str, port: int, timeout: float = 3.0) -> dict:
         }
 
 
-def get_mock_task(
-    host: str,
-    port: int,
-    worker_name: str,
-    timeout: float = 3.0,
-) -> dict:
+def get_mock_task( host: str, port: int, worker_name: str, timeout: float = 3.0, ) -> dict:
     with grpc.insecure_channel(f"{host}:{port}") as channel:
         grpc.channel_ready_future(channel).result(timeout=timeout)
         stub = connection_pb2_grpc.ConnectionServiceStub(channel)
